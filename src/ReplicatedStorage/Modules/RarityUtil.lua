@@ -34,14 +34,28 @@ end
 --[[
 	Ouvre une capsule pour un joueur.
 	`pityCounter` = nombre d'ouvertures depuis le dernier Legendaire/Viral.
+	`luckMultiplier` (Game Pass "2x Chance") : tire `luckMultiplier` fois
+	et garde le meilleur résultat. 1 par défaut (pas de bonus).
+	`forceMinIndex` (achat "Capsule Garantie Légendaire") : force au moins
+	cette rareté, indépendamment du tirage.
 	Retourne : itemName, rarityId, rarityColor, newPityCounter
 ]]
-function RarityUtil.OpenCapsule(random, pityCounter)
-	local rarityIndex = rollRarityIndex(random)
+function RarityUtil.OpenCapsule(random, pityCounter, luckMultiplier, forceMinIndex)
+	luckMultiplier = luckMultiplier or 1
 
+	local rarityIndex = rollRarityIndex(random)
+	for _ = 2, luckMultiplier do
+		local reroll = rollRarityIndex(random)
+		if reroll > rarityIndex then
+			rarityIndex = reroll
+		end
+	end
+
+	if forceMinIndex and rarityIndex < forceMinIndex then
+		rarityIndex = forceMinIndex
 	-- Pity : si le joueur n'a rien eu de rare depuis trop longtemps,
 	-- on force au moins un Legendaire.
-	if pityCounter >= CapsuleConfig.PityThreshold and rarityIndex < PITY_MIN_INDEX then
+	elseif pityCounter >= CapsuleConfig.PityThreshold and rarityIndex < PITY_MIN_INDEX then
 		rarityIndex = PITY_MIN_INDEX
 	end
 

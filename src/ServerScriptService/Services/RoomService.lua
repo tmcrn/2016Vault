@@ -12,6 +12,7 @@ local CapsuleConfig = require(ReplicatedStorage.Modules.CapsuleConfig)
 
 local DataService = require(script.Parent.DataService)
 local LeaderstatsService = require(script.Parent.LeaderstatsService)
+local MonetizationService = require(script.Parent.MonetizationService)
 
 local RoomService = {}
 
@@ -23,6 +24,11 @@ function RoomService.PlaceItem(player, inventoryIndex)
 	local data = DataService.Get(player)
 	if not data then
 		return false, "DONNEES_NON_CHARGEES"
+	end
+
+	local maxSlots = MonetizationService.GetMaxRoomSlots(player)
+	if #data.RoomItems >= maxSlots then
+		return false, "CHAMBRE_PLEINE"
 	end
 
 	local item = data.Inventory[inventoryIndex]
@@ -37,7 +43,7 @@ function RoomService.PlaceItem(player, inventoryIndex)
 end
 
 -- Calcule le revenu total par seconde généré par tout ce qui est placé
--- dans la Chambre Rétro d'un joueur.
+-- dans la Chambre Rétro d'un joueur (avant le bonus "2x Vues").
 local function computeIncomePerSecond(data)
 	local total = 0
 	for _, item in ipairs(data.RoomItems) do
@@ -57,7 +63,8 @@ task.spawn(function()
 		for _, player in ipairs(Players:GetPlayers()) do
 			local data = DataService.Get(player)
 			if data then
-				local income = computeIncomePerSecond(data) * TICK_SECONDS
+				local cashMultiplier = MonetizationService.GetCashMultiplier(player)
+				local income = computeIncomePerSecond(data) * TICK_SECONDS * cashMultiplier
 				if income > 0 then
 					data.Cash += income
 					LeaderstatsService.SetCash(player, data.Cash)

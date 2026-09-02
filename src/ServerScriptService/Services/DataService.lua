@@ -19,6 +19,7 @@ local DEFAULT_DATA = {
 	PityCounter = 0,
 	Inventory = {}, -- liste de {Name=..., Rarity=...}
 	RoomItems = {}, -- liste des objets placés dans la Chambre Rétro
+	ProcessedReceipts = {}, -- [purchaseId] = true, évite de créditer un achat deux fois
 }
 
 local function deepCopy(t)

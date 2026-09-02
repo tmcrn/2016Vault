@@ -81,28 +81,63 @@ Clique sur "Play" en haut de Studio. Tu dois voir :
         LeaderstatsService.lua   → le compteur "Vues" affiché aux joueurs
         CapsuleService.lua       → logique d'ouverture d'une capsule
         RoomService.lua          → revenu passif de la Chambre Rétro
+        MonetizationService.lua  → Game Passes + Developer Products
     StarterPlayer/StarterPlayerScripts/
-      CapsuleUIController.client.lua → toute l'interface (bouton + popup)
+      CapsuleUIController.client.lua → interface capsule (bouton + popup)
+      ShopUIController.client.lua    → boutique (Game Passes + achats)
 ```
 
 **Pour ajouter du contenu** (nouveaux objets, nouvelles raretés, changer
 les prix) : modifie uniquement `CapsuleConfig.lua`, rien d'autre à toucher.
 
-## Prochaines étapes (roadmap monétisation)
+## Monétisation — activer les vrais paiements Robux
 
-Ce qui est déjà en place = la boucle de jeu gratuite complète. Pour
-monétiser, dans l'ordre de priorité :
+Le code des Game Passes et Developer Products est déjà écrit et branché
+(2x Vues, 2x Chance, +6 Slots Chambre, Capsule Premium, Capsule Garantie
+Légendaire). Il ne manque que les **IDs**, à récupérer en créant chaque
+objet dans Studio :
 
-1. **Game Passes** (Studio → Monetization → Game Passes) : "2x Vues",
-   "2x Chance", slots de Chambre Rétro supplémentaires. Se vérifient avec
-   `MarketplaceService:UserOwnsGamePassAsync`.
-2. **Developer Products** : capsule premium à l'unité, "capsule garantie
-   Légendaire". Se déclenchent via `MarketplaceService:PromptProductPurchase`.
-3. **Battle Pass hebdomadaire** thématique (nouvel objet du moment lié à
+1. **Publie ton jeu** (File → Publish to Roblox As...) si ce n'est pas
+   déjà fait — obligatoire pour créer des Game Passes/Developer Products.
+2. Onglet **Home** (ou **Monetization** selon ta version de Studio) →
+   **Game Passes** → **Create** :
+   - Crée "2x Vues", "2x Chance", "+6 Slots Chambre" (une image + un nom
+     suffisent, le prix se règle après validation par Roblox).
+   - Chaque Game Pass créé affiche son **ID** (visible dans son URL ou
+     dans le Creator Dashboard → Creations → ton jeu → Passes).
+3. Toujours dans Monetization → **Developer Products** → **Create** :
+   - Crée "Capsule Premium" et "Capsule Garantie Légendaire", fixe leur
+     prix en Robux directement à la création.
+   - Récupère leur **ID** de la même façon.
+4. Ouvre `src/ReplicatedStorage/Modules/MonetizationConfig.lua` et
+   remplace les `0` par les vrais IDs récupérés :
+   ```lua
+   MonetizationConfig.GamePasses = {
+       DoubleCash = 123456,
+       DoubleLuck = 123457,
+       ExtraRoomSlot = 123458,
+   }
+   MonetizationConfig.DeveloperProducts = {
+       PremiumCapsule = 234567,
+       GuaranteedLegendary = 234568,
+   }
+   ```
+5. Rebuild (`rojo build ...`) ou resync, republie, teste : le bouton
+   **"🛒 Boutique"** en haut à gauche ouvre les 5 achats, qui déclenchent
+   la vraie fenêtre de paiement Roblox.
+
+Tant qu'un ID reste à `0`, le bouton correspondant ne fait juste rien —
+aucun risque de planter le jeu en attendant de tout configurer.
+
+## Prochaines étapes (roadmap)
+
+1. **Battle Pass hebdomadaire** thématique (nouvel objet du moment lié à
    la trend TikTok en cours).
-4. **Anti-triche renforcé** avant de sortir de vrais paiements : limiter
-   la fréquence d'ouverture côté serveur (déjà partiellement fait via le
-   coût en Vues), logs des transactions.
+2. **Décor de la Chambre Rétro** : afficher les objets placés en 3D au
+   lieu d'un simple compteur, pour que ce soit satisfaisant visuellement.
+3. **Anti-triche renforcé** avant de pousser du vrai trafic : limiter la
+   fréquence d'ouverture côté serveur (déjà fait via le coût en Vues),
+   logs des transactions.
 
 ⚠️ Respecte les [règles Roblox sur les objets aléatoires](https://en.help.roblox.com/hc/en-us/articles/8592065628180) :
 les probabilités de chaque rareté doivent être affichées publiquement dans
