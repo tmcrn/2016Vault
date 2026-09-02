@@ -17,6 +17,9 @@ local CapsuleService = require(script.Parent.Services.CapsuleService)
 local RoomService = require(script.Parent.Services.RoomService)
 local RoomVisualService = require(script.Parent.Services.RoomVisualService)
 local MonetizationService = require(script.Parent.Services.MonetizationService)
+local AmbianceService = require(script.Parent.Services.AmbianceService)
+
+AmbianceService.Apply()
 
 -- Dossier + RemoteEvents créés au démarrage (pas besoin de les placer
 -- à la main dans Studio, tout est fait en code).
