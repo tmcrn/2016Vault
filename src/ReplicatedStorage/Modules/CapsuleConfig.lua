@@ -22,18 +22,23 @@ CapsuleConfig.Rarities = {
 CapsuleConfig.Items = {
 	Commun = {
 		"Silly Bandz", "Autocollant Smiley", "Pin's Emoji", "Bracelet Loom Basique",
+		"Bille Rebondissante", "Sucette Chupa Chups Pop-Up", "Shopkins Mini",
 	},
 	Rare = {
 		"Slime Pastel", "Casquette Snapback", "Loom Arc-en-ciel", "Sticker Dab",
+		"Beanie Boo Pailleté", "Littlest Pet Shop", "Figurine Power Rangers",
 	},
 	Epique = {
 		"Fidget Cube", "Peluche Minion", "Écouteurs Filaires Stylés", "Skin Vine Classique",
+		"Hatchimal Bébé", "My Little Pony Brillante", "Fingerling Pailleté",
 	},
 	Legendaire = {
 		"Fidget Spinner Holographique", "Slime Cristal Géant", "Casque Beats Rétro",
+		"Furby Vintage", "Hatchimal Doré",
 	},
 	Viral = {
 		"Fidget Spinner Doré", "Capsule Vine Légendaire (son Damn Daniel)",
+		"Furby Arc-en-ciel Édition Limitée",
 	},
 }
 
