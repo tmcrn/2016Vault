@@ -19,8 +19,10 @@ local RoomVisualService = require(script.Parent.Services.RoomVisualService)
 local MonetizationService = require(script.Parent.Services.MonetizationService)
 local AmbianceService = require(script.Parent.Services.AmbianceService)
 local LeaderboardService = require(script.Parent.Services.LeaderboardService)
+local WorldDecorService = require(script.Parent.Services.WorldDecorService)
 
 AmbianceService.Apply()
+WorldDecorService.Build()
 
 -- Dossier + RemoteEvents créés au démarrage (pas besoin de les placer
 -- à la main dans Studio, tout est fait en code).
@@ -59,6 +61,11 @@ Players.PlayerAdded:Connect(function(player)
 	local data = DataService.Load(player)
 	LeaderstatsService.Setup(player, data)
 	RoomVisualService.Refresh(player, data.RoomItems)
+
+	-- Envoi immédiat (pas besoin d'attendre la boucle de 60s) pour que
+	-- le joueur se voie tout de suite sur son propre panneau.
+	LeaderboardService.SubmitScore(player, data.Cash)
+	RoomVisualService.UpdateAllLeaderboards(LeaderboardService.GetTop(5))
 end)
 
 Players.PlayerRemoving:Connect(function(player)
