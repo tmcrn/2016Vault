@@ -8,7 +8,27 @@
 local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 
-local VaultStore = DataStoreService:GetDataStore("Vault2016_PlayerData_v1")
+-- GetDataStore() peut lever une erreur directement quand l'API DataStore
+-- n'est pas accessible (Studio sans "Enable Studio Access to API
+-- Services", ou place jamais publiée). On l'encapsule pour que ça ne
+-- fasse pas planter tout Main.server.lua (et donc tout le reste du jeu :
+-- Chambre, Inventaire, remotes...) au chargement.
+local VaultStore
+do
+	local ok, result = pcall(function()
+		return DataStoreService:GetDataStore("Vault2016_PlayerData_v1")
+	end)
+	if ok then
+		VaultStore = result
+	else
+		warn(
+			"DataService: DataStore indisponible (" .. tostring(result) .. "). "
+				.. "Le jeu tourne SANS sauvegarde tant que 'Enable Studio Access "
+				.. "to API Services' n'est pas coché (File > Experience Settings > "
+				.. "Security) ou que le jeu n'est pas publié."
+		)
+	end
+end
 
 local DataService = {}
 
@@ -31,6 +51,10 @@ local function deepCopy(t)
 end
 
 local function loadWithRetry(key, attempts)
+	if not VaultStore then
+		return false, nil
+	end
+
 	attempts = attempts or 3
 	for i = 1, attempts do
 		local ok, result = pcall(function()
@@ -46,6 +70,10 @@ local function loadWithRetry(key, attempts)
 end
 
 local function saveWithRetry(key, data, attempts)
+	if not VaultStore then
+		return false
+	end
+
 	attempts = attempts or 3
 	for i = 1, attempts do
 		local ok, err = pcall(function()
