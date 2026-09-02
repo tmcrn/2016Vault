@@ -11,9 +11,9 @@ local MonetizationConfig = {}
 
 -- Studio > Monetization > Game Passes > Create (récupère l'ID affiché après création)
 MonetizationConfig.GamePasses = {
-	DoubleCash = 0,     -- "2x Vues" : double le revenu passif de la Chambre Rétro
-	DoubleLuck = 0,     -- "2x Chance" : tire deux fois et garde la meilleure rareté
-	ExtraRoomSlot = 0,  -- "+6 Slots Chambre" : plus de place pour poser des objets
+	DoubleCash = 1965824029,     -- "2x Vues" : double le revenu passif de la Chambre Rétro
+	DoubleLuck = 1967568725,     -- "2x Chance" : tire deux fois et garde la meilleure rareté
+	ExtraRoomSlot = 1969260262,  -- "+6 Slots Chambre" : plus de place pour poser des objets
 }
 
 -- Studio > Monetization > Developer Products > Create
