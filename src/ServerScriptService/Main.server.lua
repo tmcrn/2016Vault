@@ -8,10 +8,10 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local DataService = require(script.Services.DataService)
-local LeaderstatsService = require(script.Services.LeaderstatsService)
-local CapsuleService = require(script.Services.CapsuleService)
-local RoomService = require(script.Services.RoomService)
+local DataService = require(script.Parent.Services.DataService)
+local LeaderstatsService = require(script.Parent.Services.LeaderstatsService)
+local CapsuleService = require(script.Parent.Services.CapsuleService)
+local RoomService = require(script.Parent.Services.RoomService)
 
 -- Dossier + RemoteEvents créés au démarrage (pas besoin de les placer
 -- à la main dans Studio, tout est fait en code).

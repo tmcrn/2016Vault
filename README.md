@@ -23,21 +23,39 @@ Studio — seulement à connecter Rojo et appuyer sur Play.
 3. **Plugin Rojo dans Studio** : ouvre Roblox Studio → onglet "Plugins" →
    "Manage Plugins" → cherche "Rojo" dans le Toolbox → installe-le.
 
-## Étape 2 — Créer ton jeu sur Roblox
+## Étape 2 — Générer le fichier de jeu
 
-1. Ouvre Roblox Studio → "New" → modèle **Baseplate**.
-2. Sauvegarde-le et publie-le une première fois (File → Publish to Roblox)
-   pour qu'il existe sur ton compte.
-
-## Étape 3 — Synchroniser le code avec Studio
+⚠️ Le plugin Rojo (`rojo serve` + Connect) plante parfois avec une erreur
+`protocolVersion` selon la version installée. La méthode la plus fiable,
+surtout pour un premier jeu, est de **construire un fichier de jeu complet**
+directement :
 
 1. Dans un terminal, à la racine du repo, lance :
    ```
-   rojo serve
+   rojo build default.project.json --output 2016Vault.rbxlx
    ```
-2. Dans Studio, ouvre l'onglet "Plugins" → clique sur "Rojo" → "Connect".
-3. Le code apparaît instantanément dans l'explorer de Studio
-   (ReplicatedStorage, ServerScriptService, StarterPlayer...).
+2. Ouvre **Roblox Studio** → **File → Open from File...** → sélectionne
+   `2016Vault.rbxlx`. Tout le code est déjà à sa place, rien à copier.
+3. **Ajoute un sol** (le build ne contient pas de Workspace/terrain) :
+   - Clic droit sur **Workspace** dans l'Explorer → Insert Object →
+     **SpawnLocation**.
+   - Sélectionne-le, et dans Properties mets `Size` à `50, 1, 50`,
+     `Position` à `0, 0, 0`, et coche `Anchored`.
+4. Appuie sur **Play** pour tester.
+5. Une fois content : **File → Publish to Roblox As...** pour le mettre
+   en ligne sur ton compte.
+
+Si tu modifies le code plus tard, relance `rojo build` puis rouvre le
+fichier généré — ça écrase les changements faits à la main dans Studio
+(sol, Game Passes...), donc pense à les refaire après un rebuild.
+
+### Alternative (sync en direct, si le plugin fonctionne chez toi)
+
+1. Ouvre Roblox Studio → "New" → modèle **Baseplate**, publie-le une
+   première fois.
+2. Dans un terminal, lance `rojo serve`.
+3. Dans Studio, onglet "Plugins" → "Rojo" → "Connect". Le code se
+   synchronise en direct à chaque modification de fichier.
 
 ## Étape 4 — Tester
 
