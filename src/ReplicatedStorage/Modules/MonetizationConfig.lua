@@ -18,8 +18,8 @@ MonetizationConfig.GamePasses = {
 
 -- Studio > Monetization > Developer Products > Create
 MonetizationConfig.DeveloperProducts = {
-	PremiumCapsule = 0,       -- Ouvre une capsule instantanément, sans payer en Vues
-	GuaranteedLegendary = 0,  -- Ouvre une capsule garantie Légendaire ou mieux
+	PremiumCapsule = 3711047703,       -- Ouvre une capsule instantanément, sans payer en Vues (30 Robux)
+	GuaranteedLegendary = 3711047715,  -- Ouvre une capsule garantie Légendaire ou mieux (100 Robux)
 }
 
 -- Slots de base dans la Chambre Rétro (sans aucun Game Pass).
