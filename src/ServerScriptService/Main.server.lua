@@ -18,6 +18,7 @@ local RoomService = require(script.Parent.Services.RoomService)
 local RoomVisualService = require(script.Parent.Services.RoomVisualService)
 local MonetizationService = require(script.Parent.Services.MonetizationService)
 local AmbianceService = require(script.Parent.Services.AmbianceService)
+local LeaderboardService = require(script.Parent.Services.LeaderboardService)
 
 AmbianceService.Apply()
 
@@ -61,7 +62,30 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 Players.PlayerRemoving:Connect(function(player)
+	local data = DataService.Get(player)
+	if data then
+		LeaderboardService.SubmitScore(player, data.Cash)
+	end
 	DataService.Release(player)
+end)
+
+-- Toutes les 60 secondes : chaque joueur en ligne envoie son score au
+-- classement global, puis tous les panneaux "Top Joueurs" des chambres
+-- sont redessinés avec le nouveau top 5.
+task.spawn(function()
+	while true do
+		task.wait(60)
+
+		for _, player in ipairs(Players:GetPlayers()) do
+			local data = DataService.Get(player)
+			if data then
+				LeaderboardService.SubmitScore(player, data.Cash)
+			end
+		end
+
+		local top = LeaderboardService.GetTop(5)
+		RoomVisualService.UpdateAllLeaderboards(top)
+	end
 end)
 
 openCapsuleRemote.OnServerEvent:Connect(function(player)

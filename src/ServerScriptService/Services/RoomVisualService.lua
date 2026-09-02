@@ -86,6 +86,48 @@ local function buildBoombox(position, room)
 	end
 end
 
+-- Panneau "Top Joueurs" accroché au mur du fond, mis à jour par
+-- LeaderboardService. Retourne le Frame dans lequel poser les lignes.
+local function buildLeaderboardBoard(origin, half, room)
+	local board = Instance.new("Part")
+	board.Name = "LeaderboardBoard"
+	board.Size = Vector3.new(8, 6, 0.3)
+	board.Anchored = true
+	board.Material = Enum.Material.Metal
+	board.Color = Color3.fromRGB(20, 20, 28)
+	board.CFrame = CFrame.new(origin + Vector3.new(0, 8, -half + 0.5)) * CFrame.Angles(0, math.pi, 0)
+	board.Parent = room
+
+	local surfaceGui = Instance.new("SurfaceGui")
+	surfaceGui.Face = Enum.NormalId.Front
+	surfaceGui.LightInfluence = 0
+	surfaceGui.PixelsPerStud = 36
+	surfaceGui.Parent = board
+
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, 0, 0, 50)
+	title.BackgroundTransparency = 1
+	title.Text = "🏆 TOP JOUEURS"
+	title.TextColor3 = Color3.fromRGB(255, 170, 0)
+	title.Font = Enum.Font.GothamBold
+	title.TextScaled = true
+	title.Parent = surfaceGui
+
+	local listFrame = Instance.new("Frame")
+	listFrame.Name = "List"
+	listFrame.Size = UDim2.new(1, -20, 1, -60)
+	listFrame.Position = UDim2.new(0, 10, 0, 55)
+	listFrame.BackgroundTransparency = 1
+	listFrame.Parent = surfaceGui
+
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.Padding = UDim.new(0, 4)
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Parent = listFrame
+
+	return listFrame
+end
+
 -- Petite pluie de paillettes façon Tumblr, au-dessus du tapis central.
 local function buildSparkles(position, room)
 	local emitterPart = Instance.new("Part")
@@ -164,6 +206,7 @@ local function buildRoomShell(index, playerName)
 	buildPalmTree(origin + Vector3.new(half - 4, 1, -half + 4), room)
 	buildSparkles(origin, room)
 	buildBoombox(origin + Vector3.new(-half + 4, 1, half - 4), room)
+	local leaderboardList = buildLeaderboardBoard(origin, half, room)
 
 	-- Néon flottant avec le pseudo du joueur au-dessus de l'entrée.
 	local signPart = Instance.new("Part")
@@ -206,7 +249,7 @@ local function buildRoomShell(index, playerName)
 
 	room.Parent = roomsFolder
 
-	return pedestalsFolder, spawn, origin
+	return pedestalsFolder, spawn, origin, leaderboardList
 end
 
 --[[
@@ -218,12 +261,13 @@ function RoomVisualService.CreateRoomFor(player)
 	local index = nextRoomIndex
 	nextRoomIndex += 1
 
-	local pedestalsFolder, spawn, origin = buildRoomShell(index, player.Name)
+	local pedestalsFolder, spawn, origin, leaderboardList = buildRoomShell(index, player.Name)
 	spawn.Parent.Name = player.Name .. "_Room"
 
 	playerRooms[player] = {
 		PedestalsFolder = pedestalsFolder,
 		Origin = origin,
+		LeaderboardList = leaderboardList,
 	}
 
 	player.RespawnLocation = spawn
@@ -308,6 +352,45 @@ function RoomVisualService.Refresh(player, roomItems)
 		label.TextScaled = true
 		label.Text = item.Name
 		label.Parent = billboard
+	end
+end
+
+local RANK_MEDALS = { "🥇", "🥈", "🥉" }
+
+--[[
+	Redessine le panneau "Top Joueurs" de TOUTES les chambres actives à
+	partir de `entries` (liste de {Name=, Score=}, voir LeaderboardService).
+	Appelé périodiquement par Main.server.lua, pas par joueur.
+]]
+function RoomVisualService.UpdateAllLeaderboards(entries)
+	for _, entry in pairs(playerRooms) do
+		local list = entry.LeaderboardList
+		if list then
+			list:ClearAllChildren()
+
+			local layout = Instance.new("UIListLayout")
+			layout.Padding = UDim.new(0, 4)
+			layout.SortOrder = Enum.SortOrder.LayoutOrder
+			layout.Parent = list
+
+			for rank, playerEntry in ipairs(entries) do
+				local row = Instance.new("TextLabel")
+				row.Size = UDim2.new(1, 0, 0, 34)
+				row.BackgroundTransparency = 1
+				row.TextColor3 = Color3.fromRGB(255, 255, 255)
+				row.Font = Enum.Font.Gotham
+				row.TextScaled = true
+				row.TextXAlignment = Enum.TextXAlignment.Left
+				row.Text = string.format(
+					"%s %d. %s — %d",
+					RANK_MEDALS[rank] or "🎖️",
+					rank,
+					playerEntry.Name,
+					playerEntry.Score
+				)
+				row.Parent = list
+			end
+		end
 	end
 end
 
