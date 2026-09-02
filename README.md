@@ -129,12 +129,42 @@ objet dans Studio :
 Tant qu'un ID reste à `0`, le bouton correspondant ne fait juste rien —
 aucun risque de planter le jeu en attendant de tout configurer.
 
+## Radio — ajouter des pistes
+
+Le bouton **"📻 Radio"** (violet) liste des pistes lisibles dans la
+Chambre Rétro. Aucune piste n'est configurée par défaut.
+
+⚠️ **N'utilise que des morceaux libres de droits / royalty-free** (ou
+dont tu détiens les droits). Pas de vraies chansons commerciales (Justin
+Bieber et compagnie) sans licence — Roblox les supprime tôt ou tard et
+ça peut faire suspendre ton compte développeur.
+
+1. Trouve un morceau libre de droits : [Pixabay Music](https://pixabay.com/music/),
+   [Free Music Archive](https://freemusicarchive.org/), ou la bibliothèque
+   audio officielle de Roblox (Toolbox → Audio, filtrée sur les pistes
+   utilisables en jeu).
+2. Uploade-le sur Roblox : **Creator Dashboard → Creations → Audio → Upload**.
+   Attends la modération (quelques minutes à quelques heures).
+3. Une fois approuvé, récupère son **ID** (le nombre dans `rbxassetid://ID`,
+   visible sur la page de l'asset).
+4. Ouvre `src/ReplicatedStorage/Modules/RadioConfig.lua`, remplace un `0`
+   et donne un vrai nom à la piste :
+   ```lua
+   RadioConfig.Tracks = {
+       { Name = "Vibes d'été", SoundId = 123456789 },
+       ...
+   }
+   ```
+5. `git pull` chez toi (avec `rojo serve` actif) → la piste est jouable
+   immédiatement, pas besoin de republier.
+
 ## Prochaines étapes (roadmap)
 
 1. **Battle Pass hebdomadaire** thématique (nouvel objet du moment lié à
    la trend TikTok en cours).
-2. **Décor de la Chambre Rétro** : afficher les objets placés en 3D au
-   lieu d'un simple compteur, pour que ce soit satisfaisant visuellement.
+2. **Vrais modèles 3D** : Studio → View → Toolbox → Models, cherche des
+   assets gratuits (radio, plage, meubles...) et donne-moi leurs IDs pour
+   les intégrer automatiquement à chaque chambre.
 3. **Anti-triche renforcé** avant de pousser du vrai trafic : limiter la
    fréquence d'ouverture côté serveur (déjà fait via le coût en Vues),
    logs des transactions.

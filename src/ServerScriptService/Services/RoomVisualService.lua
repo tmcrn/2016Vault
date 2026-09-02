@@ -51,6 +51,41 @@ local function buildPalmTree(position, room)
 	end
 end
 
+-- Boombox décoratif (juste pour le style, la radio elle-même se joue en
+-- local via RadioUIController) posé au bord du tapis.
+local function buildBoombox(position, room)
+	local body = Instance.new("Part")
+	body.Name = "BoomboxBody"
+	body.Size = Vector3.new(3, 1.5, 1)
+	body.Position = position + Vector3.new(0, 0.75, 0)
+	body.Anchored = true
+	body.Material = Enum.Material.Metal
+	body.Color = Color3.fromRGB(40, 40, 45)
+	body.Parent = room
+
+	local handle = Instance.new("Part")
+	handle.Name = "BoomboxHandle"
+	handle.Size = Vector3.new(2, 0.2, 0.2)
+	handle.Position = position + Vector3.new(0, 1.7, 0)
+	handle.Anchored = true
+	handle.Material = Enum.Material.Metal
+	handle.Color = Color3.fromRGB(20, 20, 20)
+	handle.Parent = room
+
+	for _, offsetX in ipairs({ -1, 1 }) do
+		local speaker = Instance.new("Part")
+		speaker.Name = "BoomboxSpeaker"
+		speaker.Shape = Enum.PartType.Cylinder
+		speaker.Size = Vector3.new(0.3, 0.9, 0.9)
+		speaker.Orientation = Vector3.new(0, 0, 90)
+		speaker.Position = position + Vector3.new(offsetX, 0.75, 0.55)
+		speaker.Anchored = true
+		speaker.Material = Enum.Material.Neon
+		speaker.Color = Color3.fromRGB(255, 0, 128)
+		speaker.Parent = room
+	end
+end
+
 -- Petite pluie de paillettes façon Tumblr, au-dessus du tapis central.
 local function buildSparkles(position, room)
 	local emitterPart = Instance.new("Part")
@@ -128,6 +163,7 @@ local function buildRoomShell(index, playerName)
 	buildPalmTree(origin + Vector3.new(-half + 4, 1, -half + 4), room)
 	buildPalmTree(origin + Vector3.new(half - 4, 1, -half + 4), room)
 	buildSparkles(origin, room)
+	buildBoombox(origin + Vector3.new(-half + 4, 1, half - 4), room)
 
 	-- Néon flottant avec le pseudo du joueur au-dessus de l'entrée.
 	local signPart = Instance.new("Part")
