@@ -342,24 +342,25 @@ local function buildHillsideSign(folder)
 	base.Transparency = 0.2
 	base.Parent = folder
 
-	-- Chaîne de bosses arrondies (demi-sphères enfoncées) pour un vrai
-	-- profil de colline vallonnée plutôt qu'une dalle plate.
+	-- Chaîne de bosses très aplaties (sphères largement enterrées) pour un
+	-- vrai profil de colline vallonnée qui ne dépasse que de 15-20 studs,
+	-- plutôt que des "dômes de golf" qui flottent au-dessus des buildings.
 	local rng = Random.new(7777)
 	local x = WORLD_X_MIN - 100
 	while x < WORLD_X_MAX + 100 do
-		local bumpHeight = rng:NextNumber(25, 55)
+		local bumpHeight = rng:NextNumber(20, 40)
 		local bump = Instance.new("Part")
 		bump.Name = "HillBump"
 		bump.Shape = Enum.PartType.Ball
-		bump.Size = Vector3.new(bumpHeight * 2.2, bumpHeight * 2, bumpHeight * 2.2)
-		bump.Position = Vector3.new(x, bumpHeight * 0.15, 420 + rng:NextNumber(-20, 20))
+		bump.Size = Vector3.new(bumpHeight * 4, bumpHeight * 1.6, bumpHeight * 4)
+		bump.Position = Vector3.new(x, -bumpHeight * 0.3, 420 + rng:NextNumber(-20, 20))
 		bump.Anchored = true
 		bump.CanCollide = false
-		bump.Material = Enum.Material.Grass
-		bump.Color = Color3.fromRGB(70, 65, 70)
-		bump.Transparency = 0.2
+		bump.Material = Enum.Material.Sand
+		bump.Color = Color3.fromRGB(115, 100, 110)
+		bump.Transparency = 0.35
 		bump.Parent = folder
-		x += bumpHeight * rng:NextNumber(1.6, 2.2)
+		x += bumpHeight * rng:NextNumber(2.2, 3)
 	end
 
 	local sign = Instance.new("Part")
@@ -664,6 +665,174 @@ local function buildBoulevard(folder)
 	end
 end
 
+-- Banc public en bois, posé sur la place.
+local function buildBench(position, folder)
+	local seat = Instance.new("Part")
+	seat.Name = "BenchSeat"
+	seat.Size = Vector3.new(5, 0.3, 1.6)
+	seat.Position = position + Vector3.new(0, 1.6, 0)
+	seat.Anchored = true
+	seat.CanCollide = false
+	seat.Material = Enum.Material.WoodPlanks
+	seat.Color = Color3.fromRGB(150, 100, 70)
+	seat.Parent = folder
+
+	local back = Instance.new("Part")
+	back.Name = "BenchBack"
+	back.Size = Vector3.new(5, 1.4, 0.3)
+	back.Position = position + Vector3.new(0, 2.4, -0.65)
+	back.Anchored = true
+	back.CanCollide = false
+	back.Material = Enum.Material.WoodPlanks
+	back.Color = Color3.fromRGB(150, 100, 70)
+	back.Parent = folder
+
+	for _, offsetX in ipairs({ -2, 2 }) do
+		local leg = Instance.new("Part")
+		leg.Name = "BenchLeg"
+		leg.Size = Vector3.new(0.3, 1.6, 1.6)
+		leg.Position = position + Vector3.new(offsetX, 0.8, 0)
+		leg.Anchored = true
+		leg.CanCollide = false
+		leg.Material = Enum.Material.Metal
+		leg.Color = Color3.fromRGB(40, 40, 40)
+		leg.Parent = folder
+	end
+end
+
+-- Poubelle cylindrique.
+local function buildTrashCan(position, folder)
+	local body = Instance.new("Part")
+	body.Name = "TrashCan"
+	body.Shape = Enum.PartType.Cylinder
+	body.Size = Vector3.new(2.4, 1.4, 1.4)
+	body.Orientation = Vector3.new(0, 0, 90)
+	body.Position = position + Vector3.new(0, 1.2, 0)
+	body.Anchored = true
+	body.CanCollide = false
+	body.Material = Enum.Material.Metal
+	body.Color = Color3.fromRGB(60, 60, 65)
+	body.Parent = folder
+end
+
+-- Bac à fleurs, pour casser la monotonie du béton de la place.
+local function buildPlanter(position, folder, rng)
+	local box = Instance.new("Part")
+	box.Name = "PlanterBox"
+	box.Size = Vector3.new(3, 1.4, 3)
+	box.Position = position + Vector3.new(0, 0.7, 0)
+	box.Anchored = true
+	box.CanCollide = false
+	box.Material = Enum.Material.Concrete
+	box.Color = Color3.fromRGB(120, 100, 95)
+	box.Parent = folder
+
+	local bush = Instance.new("Part")
+	bush.Name = "PlanterBush"
+	bush.Shape = Enum.PartType.Ball
+	bush.Size = Vector3.new(2.6, 2, 2.6)
+	bush.Position = position + Vector3.new(0, 2.1, 0)
+	bush.Anchored = true
+	bush.CanCollide = false
+	bush.Material = Enum.Material.Grass
+	bush.Color = Color3.fromRGB(70, 150, 80)
+	bush.Parent = folder
+
+	for _ = 1, 3 do
+		local flower = Instance.new("Part")
+		flower.Name = "PlanterFlower"
+		flower.Shape = Enum.PartType.Ball
+		flower.Size = Vector3.new(0.5, 0.5, 0.5)
+		flower.Position = position + Vector3.new(rng:NextNumber(-1, 1), 2.6, rng:NextNumber(-1, 1))
+		flower.Anchored = true
+		flower.CanCollide = false
+		flower.Material = Enum.Material.Neon
+		flower.Color = Color3.fromRGB(255, 80, 150)
+		flower.Parent = folder
+	end
+end
+
+--[[
+	Le sol qui manquait entre les Chambres et la skyline : une vraie place
+	pavée avec joints de dalle, bordure, passages piétons, et mobilier
+	urbain (bancs/poubelles/bacs à fleurs). Commence à Z=20, JAMAIS avant
+	— les Chambres occupent Z=-20..20 pile (voir RoomVisualService), donc
+	descendre plus bas ferait chevaucher le sol des Chambres (z-fighting).
+]]
+local function buildPlazaGround(folder)
+	local centerX = (WORLD_X_MIN + WORLD_X_MAX) / 2
+	local spanX = (WORLD_X_MAX - WORLD_X_MIN) + 80
+
+	local plaza = Instance.new("Part")
+	plaza.Name = "Plaza"
+	plaza.Size = Vector3.new(spanX, 1, 125)
+	plaza.CFrame = CFrame.new(centerX, 0, 82.5)
+	plaza.Anchored = true
+	plaza.Material = Enum.Material.Concrete
+	plaza.Color = Color3.fromRGB(150, 130, 135)
+	plaza.Parent = folder
+
+	-- Bordure légèrement surélevée côté Chambres : marque la transition
+	-- au lieu d'un raccord plat invisible.
+	local curb = Instance.new("Part")
+	curb.Name = "PlazaCurb"
+	curb.Size = Vector3.new(spanX, 0.4, 2)
+	curb.Position = Vector3.new(centerX, 0.7, 21)
+	curb.Anchored = true
+	curb.Material = Enum.Material.Concrete
+	curb.Color = Color3.fromRGB(190, 175, 175)
+	curb.Parent = folder
+
+	-- Joints de dalle façon vraie place bétonnée : lignes fines et
+	-- régulières, pour casser l'effet "bloc de béton uniforme".
+	local jointX = WORLD_X_MIN - 20
+	while jointX < WORLD_X_MAX + 20 do
+		local joint = Instance.new("Part")
+		joint.Name = "PlazaJoint"
+		joint.Size = Vector3.new(0.2, 1.02, 125)
+		joint.Position = Vector3.new(jointX, 0.01, 82.5)
+		joint.Anchored = true
+		joint.CanCollide = false
+		joint.Material = Enum.Material.Concrete
+		joint.Color = Color3.fromRGB(110, 95, 100)
+		joint.Parent = folder
+		jointX += 30
+	end
+
+	-- Quelques passages piétons peints, alignés avec le boulevard.
+	local crossingX = WORLD_X_MIN + 80
+	while crossingX < WORLD_X_MAX do
+		for i = 0, 5 do
+			local stripe = Instance.new("Part")
+			stripe.Name = "CrosswalkStripe"
+			stripe.Size = Vector3.new(2.5, 1.03, 14)
+			stripe.Position = Vector3.new(crossingX - 15 + i * 6, 0.02, 128)
+			stripe.Anchored = true
+			stripe.CanCollide = false
+			stripe.Material = Enum.Material.SmoothPlastic
+			stripe.Color = Color3.fromRGB(235, 230, 225)
+			stripe.Parent = folder
+		end
+		crossingX += 220
+	end
+
+	-- Mobilier urbain (bancs / poubelles / bacs à fleurs), dans la bande
+	-- entre la bordure des Chambres et le boulevard des voitures.
+	local rng = Random.new(2468)
+	local x = WORLD_X_MIN + 15
+	while x < WORLD_X_MAX do
+		local roll = rng:NextNumber()
+		if roll < 0.35 then
+			buildBench(Vector3.new(x, 1, 45 + rng:NextNumber(-5, 5)), folder)
+		elseif roll < 0.55 then
+			buildTrashCan(Vector3.new(x, 1, 45 + rng:NextNumber(-5, 5)), folder)
+		elseif roll < 0.8 then
+			buildPlanter(Vector3.new(x, 1, 60 + rng:NextNumber(-8, 8)), folder, rng)
+		end
+		x += rng:NextNumber(25, 40)
+	end
+end
+
 -- Petits nuages plats qui flottent dans le ciel, pour casser le vide.
 local function buildClouds(folder)
 	local rng = Random.new(9999)
@@ -734,8 +903,8 @@ end
 -- à cheval sur la plage et l'océan façon jetée de Santa Monica. Les rayons
 -- alternent en néon coloré pour un vrai effet "illuminé la nuit".
 local function buildFerrisWheel(center, folder)
-	local RADIUS = 24
-	local SEGMENTS = 12
+	local RADIUS = 32
+	local SEGMENTS = 14
 	local metalColor = Color3.fromRGB(220, 220, 230)
 	local gondolaColors = {
 		Color3.fromRGB(255, 0, 128),
@@ -764,42 +933,60 @@ local function buildFerrisWheel(center, folder)
 	hub.Color = Color3.fromRGB(255, 0, 128)
 	hub.Parent = folder
 
-	-- Pilier qui tient la roue au sol.
-	partBetween(center, center - Vector3.new(0, center.Y, 0), 3, Enum.Material.Metal, metalColor, folder, "FerrisPylon")
+	-- Structure en "A" des deux côtés (comme une vraie grande roue) plutôt
+	-- qu'un unique pilier central trop frêle pour la taille de la roue.
+	local legSpread = RADIUS * 0.5
+	for _, side in ipairs({ -1, 1 }) do
+		local footA = Vector3.new(center.X + side * legSpread, 0, center.Z - 10)
+		local footB = Vector3.new(center.X + side * legSpread, 0, center.Z + 10)
+		partBetween(center, footA, 2.4, Enum.Material.Metal, metalColor, folder, "FerrisLeg")
+		partBetween(center, footB, 2.4, Enum.Material.Metal, metalColor, folder, "FerrisLeg")
+	end
 
-	-- Petite billetterie au pied de la roue.
+	-- Petite billetterie côté plage, à l'entrée de la jetée qui mène à la
+	-- roue (donc du côté Z croissant vers le rivage, pas en pleine mer).
 	local booth = Instance.new("Part")
 	booth.Name = "TicketBooth"
-	booth.Size = Vector3.new(6, 6, 5)
-	booth.Position = center - Vector3.new(0, center.Y - 3, 12)
+	booth.Size = Vector3.new(7, 7, 6)
+	booth.Position = Vector3.new(center.X, 3.5, center.Z + RADIUS + 10)
 	booth.Anchored = true
 	booth.Material = Enum.Material.WoodPlanks
 	booth.Color = Color3.fromRGB(255, 200, 0)
 	booth.Parent = folder
 
 	for i, rimPos in ipairs(rimPositions) do
-		local spoke = partBetween(center, rimPos, 0.4, Enum.Material.Neon, rimNeonColors[(i % 2) + 1], folder, "FerrisSpoke")
+		local spoke = partBetween(center, rimPos, 0.7, Enum.Material.Neon, rimNeonColors[(i % 2) + 1], folder, "FerrisSpoke")
 		spoke.Transparency = 0.1
 
 		local nextPos = rimPositions[(i % SEGMENTS) + 1]
-		local rim = partBetween(rimPos, nextPos, 0.5, Enum.Material.Neon, rimNeonColors[(i % 2) + 1], folder, "FerrisRim")
+		local rim = partBetween(rimPos, nextPos, 1, Enum.Material.Neon, rimNeonColors[(i % 2) + 1], folder, "FerrisRim")
 		rim.Transparency = 0.1
 
 		local rimLight = Instance.new("PointLight")
 		rimLight.Color = rimNeonColors[(i % 2) + 1]
-		rimLight.Range = 10
+		rimLight.Range = 12
 		rimLight.Brightness = 1
 		rimLight.Parent = rim
 
 		if i % 2 == 0 then
 			local gondola = Instance.new("Part")
 			gondola.Name = "FerrisGondola"
-			gondola.Size = Vector3.new(3, 3, 3)
-			gondola.Position = rimPos - Vector3.new(0, 2, 0)
+			gondola.Size = Vector3.new(4, 4, 4)
+			gondola.Position = rimPos - Vector3.new(0, 2.4, 0)
 			gondola.Anchored = true
 			gondola.Material = Enum.Material.SmoothPlastic
 			gondola.Color = gondolaColors[(i % 3) + 1]
 			gondola.Parent = folder
+
+			local gondolaBar = Instance.new("Part")
+			gondolaBar.Name = "FerrisGondolaBar"
+			gondolaBar.Size = Vector3.new(0.3, 2, 0.3)
+			gondolaBar.Position = rimPos - Vector3.new(0, 0.8, 0)
+			gondolaBar.Anchored = true
+			gondolaBar.CanCollide = false
+			gondolaBar.Material = Enum.Material.Metal
+			gondolaBar.Color = metalColor
+			gondolaBar.Parent = folder
 		end
 	end
 end
@@ -828,10 +1015,11 @@ function WorldDecorService.Build()
 	buildSkyline(folder)
 	buildHillsideSign(folder)
 	buildBeachDecor(folder)
+	buildPlazaGround(folder)
 	buildBoulevard(folder)
 	buildClouds(folder)
 
-	local ferrisCenter = Vector3.new(150, 30, -90)
+	local ferrisCenter = Vector3.new(150, 38, -90)
 	buildFerrisWheel(ferrisCenter, folder)
 	buildPier(Vector3.new(150, 1, -50), Vector3.new(150, 1, ferrisCenter.Z), folder)
 end
