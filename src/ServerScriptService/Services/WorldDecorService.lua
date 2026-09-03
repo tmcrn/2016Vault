@@ -1,9 +1,14 @@
 --[[
 	WorldDecorService.lua
 	Décor extérieur PARTAGÉ (une seule fois pour tout le serveur, pas
-	par joueur) : skyline façon Los Angeles d'un côté, plage + océan au
-	coucher de soleil de l'autre, et une grande roue façon Santa Monica
-	Pier. Visible à travers les murs semi-transparents des Chambres.
+	par joueur) : skyline façon downtown LA au coucher de soleil, boulevard
+	bordé de palmiers et lampadaires rétro, plage + océan, et une grande
+	roue façon Santa Monica Pier. Visible à travers les murs
+	semi-transparents des Chambres. Pensé "2016 Tumblr aesthetic".
+
+	NOTE: ce script ne construit QUE dans son propre dossier "WorldDecor".
+	Il ne touche jamais à ce que tu as ajouté toi-même dans le Workspace
+	(ta route par exemple) — aucun risque de conflit ou d'écrasement.
 ]]
 
 local Workspace = game:GetService("Workspace")
@@ -35,7 +40,34 @@ local function partBetween(a, b, thickness, material, color, folder, name)
 	return part
 end
 
--- Plage + océan, teinté par le coucher de soleil (voir AmbianceService).
+-- Silhouette de montagnes au loin, très plates et désaturées, pour donner
+-- de la profondeur derrière la skyline (façon San Gabriel Mountains vues
+-- depuis downtown LA au coucher de soleil).
+local function buildDistantMountains(folder)
+	local rng = Random.new(4242)
+	local centerX = (WORLD_X_MIN + WORLD_X_MAX) / 2
+	local spanX = (WORLD_X_MAX - WORLD_X_MIN) + 400
+
+	local x = WORLD_X_MIN - 200
+	while x < WORLD_X_MAX + 200 do
+		local width = rng:NextNumber(150, 300)
+		local height = rng:NextNumber(60, 130)
+		local mountain = Instance.new("WedgePart")
+		mountain.Name = "DistantMountain"
+		mountain.Size = Vector3.new(width, height, 40)
+		mountain.CFrame = CFrame.new(x, height / 2 - 15, 900) * CFrame.Angles(0, math.rad(rng:NextInteger(0, 359)), 0)
+		mountain.Anchored = true
+		mountain.CanCollide = false
+		mountain.Material = Enum.Material.Sand
+		mountain.Color = Color3.fromRGB(150, 105, 130)
+		mountain.Transparency = 0.15
+		mountain.Parent = folder
+		x += width * rng:NextNumber(0.5, 0.8)
+	end
+end
+
+-- Plage + océan : sable sec, bande de sable mouillé plus sombre le long de
+-- l'eau, ligne d'écume, puis l'océan teinté par le coucher de soleil.
 local function buildBeachAndOcean(folder)
 	local centerX = (WORLD_X_MIN + WORLD_X_MAX) / 2
 	local spanX = WORLD_X_MAX - WORLD_X_MIN
@@ -49,6 +81,26 @@ local function buildBeachAndOcean(folder)
 	beach.Color = Color3.fromRGB(235, 205, 155)
 	beach.Parent = folder
 
+	local wetSand = Instance.new("Part")
+	wetSand.Name = "WetSand"
+	wetSand.Size = Vector3.new(spanX, 1.02, 14)
+	wetSand.CFrame = CFrame.new(centerX, 0.02, -76)
+	wetSand.Anchored = true
+	wetSand.Material = Enum.Material.Sand
+	wetSand.Color = Color3.fromRGB(190, 155, 130)
+	wetSand.Parent = folder
+
+	local foamLine = Instance.new("Part")
+	foamLine.Name = "FoamLine"
+	foamLine.Size = Vector3.new(spanX, 0.3, 3)
+	foamLine.CFrame = CFrame.new(centerX, 0.4, -82)
+	foamLine.Anchored = true
+	foamLine.CanCollide = false
+	foamLine.Material = Enum.Material.Neon
+	foamLine.Color = Color3.fromRGB(255, 245, 250)
+	foamLine.Transparency = 0.35
+	foamLine.Parent = folder
+
 	local ocean = Instance.new("Part")
 	ocean.Name = "Ocean"
 	ocean.Size = Vector3.new(spanX, 1, 400)
@@ -60,11 +112,100 @@ local function buildBeachAndOcean(folder)
 	ocean.Transparency = 0.15
 	ocean.Reflectance = 0.4
 	ocean.Parent = folder
+
+	-- Quelques rangées de vaguelettes qui remontent vers la plage, plus
+	-- claires que l'océan pour simuler l'écume qui déferle.
+	local rng = Random.new(3131)
+	for row = 1, 4 do
+		local wave = Instance.new("Part")
+		wave.Name = "Wave"
+		wave.Size = Vector3.new(spanX, 0.2, 2.5)
+		wave.CFrame = CFrame.new(centerX + rng:NextNumber(-30, 30), 0.1, -95 - row * 22)
+		wave.Anchored = true
+		wave.CanCollide = false
+		wave.Material = Enum.Material.Neon
+		wave.Color = Color3.fromRGB(255, 220, 220)
+		wave.Transparency = 0.55 + row * 0.08
+		wave.Parent = folder
+	end
 end
 
--- Silhouette de buildings façon downtown LA, avec quelques fenêtres
--- allumées pour le côté "skyline en fin de journée". Un building sur 6
--- est une tour "landmark" plus haute avec un feu rouge clignotant.
+-- Panneau lumineux "rooftop billboard" façon pub géante des années 2010,
+-- posé sur un building précis pour casser la skyline avec du texte animé.
+local function buildRooftopBillboard(building, height, width, folder)
+	local frame = Instance.new("Part")
+	frame.Name = "BillboardFrame"
+	frame.Size = Vector3.new(width * 0.9, 14, 1)
+	frame.Position = building.Position + Vector3.new(0, height / 2 + 8, 0)
+	frame.Anchored = true
+	frame.CanCollide = false
+	frame.Material = Enum.Material.Metal
+	frame.Color = Color3.fromRGB(20, 20, 20)
+	frame.Parent = folder
+
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = Enum.NormalId.Front
+	gui.LightInfluence = 0
+	gui.Parent = frame
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundColor3 = Color3.fromRGB(10, 5, 15)
+	label.BackgroundTransparency = 0.1
+	label.Text = "2016"
+	label.TextColor3 = Color3.fromRGB(0, 220, 255)
+	label.Font = Enum.Font.GothamBlack
+	label.TextScaled = true
+	label.Parent = gui
+end
+
+-- Petit chapeau de toit : soit des blocs de climatisation, soit un château
+-- d'eau cylindrique sur pattes, façon vrais toits de downtown LA.
+local function buildRooftopDetail(building, height, width, rng, folder)
+	if rng:NextNumber() < 0.5 then
+		for _ = 1, rng:NextInteger(2, 4) do
+			local unit = Instance.new("Part")
+			unit.Name = "RooftopAC"
+			unit.Size = Vector3.new(rng:NextNumber(2, 4), rng:NextNumber(1.5, 2.5), rng:NextNumber(2, 4))
+			unit.Anchored = true
+			unit.CanCollide = false
+			unit.Material = Enum.Material.Metal
+			unit.Color = Color3.fromRGB(90, 90, 95)
+			unit.Position = building.Position
+				+ Vector3.new(rng:NextNumber(-width / 3, width / 3), height / 2 + 1, rng:NextNumber(-width / 3, width / 3))
+			unit.Parent = folder
+		end
+	else
+		local tankBody = Instance.new("Part")
+		tankBody.Name = "WaterTank"
+		tankBody.Shape = Enum.PartType.Cylinder
+		tankBody.Size = Vector3.new(6, 3.5, 3.5)
+		tankBody.Orientation = Vector3.new(0, 0, 90)
+		tankBody.Anchored = true
+		tankBody.CanCollide = false
+		tankBody.Material = Enum.Material.WoodPlanks
+		tankBody.Color = Color3.fromRGB(110, 75, 55)
+		tankBody.Position = building.Position + Vector3.new(0, height / 2 + 5, 0)
+		tankBody.Parent = folder
+
+		for _, offset in ipairs({ Vector3.new(1.3, -3, 1.3), Vector3.new(-1.3, -3, 1.3), Vector3.new(1.3, -3, -1.3), Vector3.new(-1.3, -3, -1.3) }) do
+			local leg = Instance.new("Part")
+			leg.Name = "WaterTankLeg"
+			leg.Size = Vector3.new(0.3, 3, 0.3)
+			leg.Anchored = true
+			leg.CanCollide = false
+			leg.Material = Enum.Material.Metal
+			leg.Color = Color3.fromRGB(40, 40, 40)
+			leg.Position = tankBody.Position + offset
+			leg.Parent = folder
+		end
+	end
+end
+
+-- Silhouette de buildings façon downtown LA, avec fenêtres allumées en
+-- motifs (pas juste aléatoire), toits détaillés, et un panneau publicitaire
+-- lumineux sur une tour landmark. Un building sur 6 est une tour "landmark"
+-- plus haute avec un feu rouge clignotant.
 local function buildSkyline(folder)
 	local rng = Random.new(1234) -- seed fixe : même skyline à chaque démarrage
 	local spacing = 40
@@ -77,6 +218,13 @@ local function buildSkyline(folder)
 		Color3.fromRGB(35, 45, 60),
 	}
 	local buildingMaterials = { Enum.Material.Slate, Enum.Material.Concrete, Enum.Material.Basalt }
+	local windowColors = {
+		Color3.fromRGB(255, 210, 120),
+		Color3.fromRGB(255, 170, 90),
+		Color3.fromRGB(180, 220, 255),
+	}
+
+	local billboardPlaced = false
 
 	for i = 0, buildingCount do
 		local isLandmark = (i % 6 == 0)
@@ -93,21 +241,49 @@ local function buildSkyline(folder)
 		building.Color = buildingColors[rng:NextInteger(1, #buildingColors)]
 		building.Parent = folder
 
-		for _ = 1, rng:NextInteger(2, 4) do
-			local window = Instance.new("Part")
-			window.Name = "Window"
-			window.Size = Vector3.new(1.5, 1.5, 0.2)
-			window.Anchored = true
-			window.CanCollide = false
-			window.Material = Enum.Material.Neon
-			window.Color = Color3.fromRGB(255, 210, 120)
-			window.Position = Vector3.new(
-				x + rng:NextNumber(-width / 2 + 1, width / 2 - 1),
-				rng:NextNumber(5, height - 5),
-				150 - width / 2 - 0.1
-			)
-			window.Parent = folder
+		-- Retrait ("setback") : une tour plus fine posée sur une base plus
+		-- large, comme beaucoup d'immeubles de downtown LA.
+		if rng:NextNumber() < 0.35 and height > 50 then
+			local towerHeight = height * rng:NextNumber(0.3, 0.5)
+			local towerWidth = width * rng:NextNumber(0.45, 0.65)
+			local tower = Instance.new("Part")
+			tower.Name = "BuildingSetback"
+			tower.Size = Vector3.new(towerWidth, towerHeight, towerWidth)
+			tower.Position = Vector3.new(x, height + towerHeight / 2, 150)
+			tower.Anchored = true
+			tower.Material = building.Material
+			tower.Color = building.Color
+			tower.Parent = folder
 		end
+
+		-- Fenêtres allumées disposées en colonnes régulières plutôt qu'en
+		-- nuage aléatoire, pour un vrai effet "grille d'immeuble".
+		local windowColor = windowColors[rng:NextInteger(1, #windowColors)]
+		local columns = math.max(2, math.floor(width / 4))
+		local rows = math.max(3, math.floor(height / 6))
+		for col = 0, columns - 1 do
+			if rng:NextNumber() < 0.7 then
+				for row = 0, rows - 1 do
+					if rng:NextNumber() < 0.35 then
+						local window = Instance.new("Part")
+						window.Name = "Window"
+						window.Size = Vector3.new(1.4, 1.4, 0.2)
+						window.Anchored = true
+						window.CanCollide = false
+						window.Material = Enum.Material.Neon
+						window.Color = windowColor
+						window.Position = Vector3.new(
+							x - width / 2 + 2 + col * (width / columns),
+							3 + row * (height / rows),
+							150 - width / 2 - 0.1
+						)
+						window.Parent = folder
+					end
+				end
+			end
+		end
+
+		buildRooftopDetail(building, height, width, rng, folder)
 
 		if isLandmark then
 			local beacon = Instance.new("Part")
@@ -134,6 +310,13 @@ local function buildSkyline(folder)
 					task.wait(1)
 				end
 			end)
+
+			-- La première tour landmark rencontrée reçoit le grand panneau
+			-- publicitaire "2016" façon Sunset Strip.
+			if not billboardPlaced then
+				billboardPlaced = true
+				buildRooftopBillboard(building, height, width, folder)
+			end
 		end
 	end
 end
@@ -179,14 +362,15 @@ local function buildHillsideSign(folder)
 	end
 end
 
--- Palmier procédural, réutilisé le long de la plage.
-local function buildBeachPalmTree(position, folder)
+-- Palmier procédural, réutilisé le long de la plage et du boulevard.
+local function buildPalmTree(position, folder, scale)
+	scale = scale or 1
 	local trunk = Instance.new("Part")
 	trunk.Name = "PalmTrunk"
 	trunk.Shape = Enum.PartType.Cylinder
-	trunk.Size = Vector3.new(10, 1.2, 1.2)
+	trunk.Size = Vector3.new(10 * scale, 1.2 * scale, 1.2 * scale)
 	trunk.Orientation = Vector3.new(0, 0, 90)
-	trunk.Position = position + Vector3.new(0, 5, 0)
+	trunk.Position = position + Vector3.new(0, 5 * scale, 0)
 	trunk.Anchored = true
 	trunk.CanCollide = false
 	trunk.Material = Enum.Material.Wood
@@ -196,14 +380,14 @@ local function buildBeachPalmTree(position, folder)
 	for i = 1, 6 do
 		local leaf = Instance.new("Part")
 		leaf.Name = "PalmLeaf"
-		leaf.Size = Vector3.new(0.5, 0.5, 6)
+		leaf.Size = Vector3.new(0.5 * scale, 0.5 * scale, 6 * scale)
 		leaf.Anchored = true
 		leaf.CanCollide = false
 		leaf.Material = Enum.Material.Grass
 		leaf.Color = Color3.fromRGB(60, 180, 90)
-		leaf.CFrame = CFrame.new(position + Vector3.new(0, 10, 0))
+		leaf.CFrame = CFrame.new(position + Vector3.new(0, 10 * scale, 0))
 			* CFrame.Angles(0, math.rad(i * 60), math.rad(35))
-			* CFrame.new(0, 0, -3)
+			* CFrame.new(0, 0, -3 * scale)
 		leaf.Parent = folder
 	end
 end
@@ -243,7 +427,80 @@ local function buildBeachSpot(position, color, folder)
 	chair.Parent = folder
 end
 
--- Sème palmiers et coins parasol le long de toute la plage.
+-- Poste de secours façon Baywatch, rouge et blanc, avec petite échelle.
+local function buildLifeguardTower(position, folder)
+	local legColor = Color3.fromRGB(230, 230, 235)
+	for _, offset in ipairs({ Vector3.new(2, 0, 2), Vector3.new(-2, 0, 2), Vector3.new(2, 0, -2), Vector3.new(-2, 0, -2) }) do
+		local leg = Instance.new("Part")
+		leg.Name = "TowerLeg"
+		leg.Size = Vector3.new(0.5, 6, 0.5)
+		leg.Position = position + offset + Vector3.new(0, 3, 0)
+		leg.Anchored = true
+		leg.CanCollide = false
+		leg.Material = Enum.Material.WoodPlanks
+		leg.Color = legColor
+		leg.Parent = folder
+	end
+
+	local cabin = Instance.new("Part")
+	cabin.Name = "TowerCabin"
+	cabin.Size = Vector3.new(6, 4, 6)
+	cabin.Position = position + Vector3.new(0, 8, 0)
+	cabin.Anchored = true
+	cabin.CanCollide = false
+	cabin.Material = Enum.Material.WoodPlanks
+	cabin.Color = Color3.fromRGB(220, 60, 60)
+	cabin.Parent = folder
+
+	local roof = Instance.new("Part")
+	roof.Name = "TowerRoof"
+	roof.Size = Vector3.new(7, 0.5, 7)
+	roof.Position = position + Vector3.new(0, 10.3, 0)
+	roof.Anchored = true
+	roof.CanCollide = false
+	roof.Material = Enum.Material.WoodPlanks
+	roof.Color = Color3.fromRGB(255, 255, 255)
+	roof.Parent = folder
+
+	local ladder = Instance.new("Part")
+	ladder.Name = "TowerLadder"
+	ladder.Size = Vector3.new(1.5, 6, 0.2)
+	ladder.CFrame = CFrame.new(position + Vector3.new(0, 3, 3)) * CFrame.Angles(math.rad(-10), 0, 0)
+	ladder.Anchored = true
+	ladder.CanCollide = false
+	ladder.Material = Enum.Material.Wood
+	ladder.Color = Color3.fromRGB(150, 100, 70)
+	ladder.Parent = folder
+end
+
+-- Filet de volley-ball planté dans le sable.
+local function buildVolleyballNet(position, folder)
+	for _, offsetX in ipairs({ -6, 6 }) do
+		local pole = Instance.new("Part")
+		pole.Name = "VolleyballPole"
+		pole.Size = Vector3.new(0.4, 6, 0.4)
+		pole.Position = position + Vector3.new(offsetX, 3, 0)
+		pole.Anchored = true
+		pole.CanCollide = false
+		pole.Material = Enum.Material.Metal
+		pole.Color = Color3.fromRGB(230, 230, 230)
+		pole.Parent = folder
+	end
+
+	local net = Instance.new("Part")
+	net.Name = "VolleyballNet"
+	net.Size = Vector3.new(12, 2.5, 0.1)
+	net.Position = position + Vector3.new(0, 4.5, 0)
+	net.Anchored = true
+	net.CanCollide = false
+	net.Material = Enum.Material.Fabric
+	net.Color = Color3.fromRGB(255, 255, 255)
+	net.Transparency = 0.5
+	net.Parent = folder
+end
+
+-- Sème palmiers, coins parasol, poste de secours et filet de volley le
+-- long de toute la plage.
 local function buildBeachDecor(folder)
 	local rng = Random.new(5678)
 	local spotColors = {
@@ -254,7 +511,7 @@ local function buildBeachDecor(folder)
 
 	local x = WORLD_X_MIN
 	while x < WORLD_X_MAX do
-		buildBeachPalmTree(Vector3.new(x, 1, -25 + rng:NextNumber(-3, 3)), folder)
+		buildPalmTree(Vector3.new(x, 1, -25 + rng:NextNumber(-3, 3)), folder)
 		x += rng:NextNumber(50, 80)
 	end
 
@@ -267,12 +524,128 @@ local function buildBeachDecor(folder)
 		)
 		x += rng:NextNumber(45, 70)
 	end
+
+	local centerX = (WORLD_X_MIN + WORLD_X_MAX) / 2
+	buildLifeguardTower(Vector3.new(centerX - 220, 1, -40), folder)
+	buildLifeguardTower(Vector3.new(centerX + 260, 1, -40), folder)
+	buildVolleyballNet(Vector3.new(centerX - 60, 1, -35), folder)
+end
+
+-- Lampadaire rétro double-globe (façon boulevard des années 2010), avec
+-- lumière chaude.
+local function buildStreetlight(position, folder)
+	local pole = Instance.new("Part")
+	pole.Name = "StreetlightPole"
+	pole.Size = Vector3.new(0.6, 11, 0.6)
+	pole.Position = position + Vector3.new(0, 5.5, 0)
+	pole.Anchored = true
+	pole.CanCollide = false
+	pole.Material = Enum.Material.Metal
+	pole.Color = Color3.fromRGB(35, 35, 40)
+	pole.Parent = folder
+
+	for _, offsetX in ipairs({ -0.9, 0.9 }) do
+		local globe = Instance.new("Part")
+		globe.Name = "StreetlightGlobe"
+		globe.Shape = Enum.PartType.Ball
+		globe.Size = Vector3.new(1.4, 1.4, 1.4)
+		globe.Position = position + Vector3.new(offsetX, 11, 0)
+		globe.Anchored = true
+		globe.CanCollide = false
+		globe.Material = Enum.Material.Neon
+		globe.Color = Color3.fromRGB(255, 225, 170)
+		globe.Parent = folder
+
+		local light = Instance.new("PointLight")
+		light.Color = Color3.fromRGB(255, 200, 150)
+		light.Range = 18
+		light.Brightness = 1.5
+		light.Parent = globe
+	end
+end
+
+-- Voiture low-poly façon 2016 (berline compacte), couleur au choix.
+local function buildParkedCar(position, color, folder)
+	local body = Instance.new("Part")
+	body.Name = "ParkedCarBody"
+	body.Size = Vector3.new(7, 2, 3.2)
+	body.Position = position + Vector3.new(0, 1.2, 0)
+	body.Anchored = true
+	body.CanCollide = false
+	body.Material = Enum.Material.SmoothPlastic
+	body.Color = color
+	body.Parent = folder
+
+	local cabin = Instance.new("Part")
+	cabin.Name = "ParkedCarCabin"
+	cabin.Size = Vector3.new(3.6, 1.4, 3)
+	cabin.Position = position + Vector3.new(-0.3, 2.4, 0)
+	cabin.Anchored = true
+	cabin.CanCollide = false
+	cabin.Material = Enum.Material.Glass
+	cabin.Color = Color3.fromRGB(40, 45, 55)
+	cabin.Transparency = 0.2
+	cabin.Parent = folder
+
+	for _, offsetX in ipairs({ -2.4, 2.4 }) do
+		for _, offsetZ in ipairs({ -1.5, 1.5 }) do
+			local wheel = Instance.new("Part")
+			wheel.Name = "ParkedCarWheel"
+			wheel.Shape = Enum.PartType.Cylinder
+			wheel.Size = Vector3.new(0.6, 1.6, 1.6)
+			wheel.Orientation = Vector3.new(0, 0, 90)
+			wheel.Position = position + Vector3.new(offsetX, 0.6, offsetZ)
+			wheel.Anchored = true
+			wheel.CanCollide = false
+			wheel.Material = Enum.Material.Slate
+			wheel.Color = Color3.fromRGB(20, 20, 20)
+			wheel.Parent = folder
+		end
+	end
+end
+
+--[[
+	Boulevard bordé de palmiers, lampadaires et voitures garées, en
+	contrebas de la skyline. Placé volontairement en retrait des buildings
+	(Z=125) pour ne jamais chevaucher une route que tu aurais toi-même
+	posée dans le Workspace : ce ne sont que des éléments de trottoir.
+]]
+local function buildBoulevard(folder)
+	local rng = Random.new(8642)
+	local carColors = {
+		Color3.fromRGB(200, 40, 60),
+		Color3.fromRGB(230, 230, 235),
+		Color3.fromRGB(40, 60, 120),
+		Color3.fromRGB(230, 190, 40),
+		Color3.fromRGB(30, 30, 35),
+	}
+
+	local x = WORLD_X_MIN + 10
+	while x < WORLD_X_MAX do
+		buildStreetlight(Vector3.new(x, 1, 128), folder)
+		if rng:NextNumber() < 0.6 then
+			buildPalmTree(Vector3.new(x + rng:NextNumber(8, 14), 1, 122), folder, 0.85)
+		end
+		if rng:NextNumber() < 0.5 then
+			buildParkedCar(
+				Vector3.new(x + rng:NextNumber(-6, 6), 1, 112),
+				carColors[rng:NextInteger(1, #carColors)],
+				folder
+			)
+		end
+		x += rng:NextNumber(35, 55)
+	end
 end
 
 -- Petits nuages plats qui flottent dans le ciel, pour casser le vide.
 local function buildClouds(folder)
 	local rng = Random.new(9999)
-	for _ = 1, 25 do
+	local cloudTints = {
+		Color3.fromRGB(255, 220, 230),
+		Color3.fromRGB(255, 200, 190),
+		Color3.fromRGB(230, 200, 235),
+	}
+	for _ = 1, 28 do
 		local cloud = Instance.new("Part")
 		cloud.Name = "Cloud"
 		cloud.Size = Vector3.new(rng:NextNumber(20, 50), 4, rng:NextNumber(15, 30))
@@ -284,20 +657,55 @@ local function buildClouds(folder)
 		cloud.Anchored = true
 		cloud.CanCollide = false
 		cloud.Material = Enum.Material.SmoothPlastic
-		cloud.Color = Color3.fromRGB(255, 220, 230)
+		cloud.Color = cloudTints[rng:NextInteger(1, #cloudTints)]
 		cloud.Transparency = 0.25
 		cloud.Parent = folder
 	end
 end
 
--- Jetée en bois qui part de la plage jusqu'à la grande roue.
+-- Jetée en bois qui part de la plage jusqu'à la grande roue, avec ses
+-- propres lampadaires façon Santa Monica Pier.
 local function buildPier(startPos, endPos, folder)
 	local plank = partBetween(startPos, endPos, 8, Enum.Material.WoodPlanks, Color3.fromRGB(110, 75, 50), folder, "Pier")
 	plank.Size = Vector3.new(8, 1, (endPos - startPos).Magnitude)
+
+	local direction = (endPos - startPos).Unit
+	local length = (endPos - startPos).Magnitude
+	for dist = 15, length - 10, 25 do
+		local pos = startPos + direction * dist
+		for _, side in ipairs({ -4.5, 4.5 }) do
+			local lamp = Instance.new("Part")
+			lamp.Name = "PierLampPost"
+			lamp.Size = Vector3.new(0.4, 7, 0.4)
+			lamp.Position = pos + Vector3.new(side, 4, 0)
+			lamp.Anchored = true
+			lamp.CanCollide = false
+			lamp.Material = Enum.Material.Metal
+			lamp.Color = Color3.fromRGB(30, 30, 35)
+			lamp.Parent = folder
+
+			local bulb = Instance.new("Part")
+			bulb.Name = "PierLampBulb"
+			bulb.Shape = Enum.PartType.Ball
+			bulb.Size = Vector3.new(1.1, 1.1, 1.1)
+			bulb.Position = pos + Vector3.new(side, 7.5, 0)
+			bulb.Anchored = true
+			bulb.CanCollide = false
+			bulb.Material = Enum.Material.Neon
+			bulb.Color = Color3.fromRGB(255, 225, 170)
+			bulb.Parent = folder
+
+			local light = Instance.new("PointLight")
+			light.Color = Color3.fromRGB(255, 200, 150)
+			light.Range = 14
+			light.Parent = bulb
+		end
+	end
 end
 
 -- Grande roue procédurale (rayons + jante en segments + nacelles), posée
--- à cheval sur la plage et l'océan façon jetée de Santa Monica.
+-- à cheval sur la plage et l'océan façon jetée de Santa Monica. Les rayons
+-- alternent en néon coloré pour un vrai effet "illuminé la nuit".
 local function buildFerrisWheel(center, folder)
 	local RADIUS = 24
 	local SEGMENTS = 12
@@ -306,6 +714,10 @@ local function buildFerrisWheel(center, folder)
 		Color3.fromRGB(255, 0, 128),
 		Color3.fromRGB(0, 200, 255),
 		Color3.fromRGB(255, 200, 0),
+	}
+	local rimNeonColors = {
+		Color3.fromRGB(255, 0, 128),
+		Color3.fromRGB(0, 220, 255),
 	}
 
 	local rimPositions = {}
@@ -328,11 +740,29 @@ local function buildFerrisWheel(center, folder)
 	-- Pilier qui tient la roue au sol.
 	partBetween(center, center - Vector3.new(0, center.Y, 0), 3, Enum.Material.Metal, metalColor, folder, "FerrisPylon")
 
+	-- Petite billetterie au pied de la roue.
+	local booth = Instance.new("Part")
+	booth.Name = "TicketBooth"
+	booth.Size = Vector3.new(6, 6, 5)
+	booth.Position = center - Vector3.new(0, center.Y - 3, 12)
+	booth.Anchored = true
+	booth.Material = Enum.Material.WoodPlanks
+	booth.Color = Color3.fromRGB(255, 200, 0)
+	booth.Parent = folder
+
 	for i, rimPos in ipairs(rimPositions) do
-		partBetween(center, rimPos, 0.4, Enum.Material.Metal, metalColor, folder, "FerrisSpoke")
+		local spoke = partBetween(center, rimPos, 0.4, Enum.Material.Neon, rimNeonColors[(i % 2) + 1], folder, "FerrisSpoke")
+		spoke.Transparency = 0.1
 
 		local nextPos = rimPositions[(i % SEGMENTS) + 1]
-		partBetween(rimPos, nextPos, 0.5, Enum.Material.Metal, metalColor, folder, "FerrisRim")
+		local rim = partBetween(rimPos, nextPos, 0.5, Enum.Material.Neon, rimNeonColors[(i % 2) + 1], folder, "FerrisRim")
+		rim.Transparency = 0.1
+
+		local rimLight = Instance.new("PointLight")
+		rimLight.Color = rimNeonColors[(i % 2) + 1]
+		rimLight.Range = 10
+		rimLight.Brightness = 1
+		rimLight.Parent = rim
 
 		if i % 2 == 0 then
 			local gondola = Instance.new("Part")
@@ -353,6 +783,9 @@ end
 	existe déjà dans le Workspace. Ça permet de le générer une seule
 	fois à la main via la Command Bar en mode Édition (pour ensuite le
 	modifier/compléter toi-même) sans qu'il se duplique à chaque Play.
+
+	Ne touche jamais à ce que tu as construit toi-même ailleurs dans le
+	Workspace (comme ta route) : tout va dans le dossier "WorldDecor".
 ]]
 function WorldDecorService.Build()
 	if Workspace:FindFirstChild("WorldDecor") then
@@ -363,10 +796,12 @@ function WorldDecorService.Build()
 	folder.Name = "WorldDecor"
 	folder.Parent = Workspace
 
+	buildDistantMountains(folder)
 	buildBeachAndOcean(folder)
 	buildSkyline(folder)
 	buildHillsideSign(folder)
 	buildBeachDecor(folder)
+	buildBoulevard(folder)
 	buildClouds(folder)
 
 	local ferrisCenter = Vector3.new(150, 30, -90)
