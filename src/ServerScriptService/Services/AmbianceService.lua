@@ -15,20 +15,23 @@ function AmbianceService.Apply()
 	-- apparaître la lune et tout s'assombrit vers la nuit.
 	Lighting.ClockTime = 17.2
 	Lighting.GeographicLatitude = 20 -- soleil plus bas dans le ciel, ombres longues
-	Lighting.Brightness = 3.5
-	Lighting.Ambient = Color3.fromRGB(110, 65, 100)
-	Lighting.OutdoorAmbient = Color3.fromRGB(160, 100, 120)
-	Lighting.FogColor = Color3.fromRGB(255, 160, 190)
-	Lighting.FogStart = 200
-	Lighting.FogEnd = 1600
+	Lighting.Brightness = 2.5
+	Lighting.Ambient = Color3.fromRGB(75, 50, 70)
+	Lighting.OutdoorAmbient = Color3.fromRGB(130, 90, 100)
+	Lighting.FogColor = Color3.fromRGB(255, 175, 195)
+	Lighting.FogStart = 500
+	Lighting.FogEnd = 2200
 
+	-- Densité/Haze nettement réduits : trop forts, ils noyaient toute la
+	-- scène dans un même rose uniforme et effaçaient le contraste entre
+	-- le premier plan (plage/chambre) et l'arrière-plan (skyline/collines).
 	local atmosphere = Instance.new("Atmosphere")
-	atmosphere.Density = 0.22
-	atmosphere.Offset = 0.15
-	atmosphere.Color = Color3.fromRGB(255, 190, 205)
-	atmosphere.Decay = Color3.fromRGB(200, 130, 170)
-	atmosphere.Glare = 0.5
-	atmosphere.Haze = 0.8
+	atmosphere.Density = 0.1
+	atmosphere.Offset = 0.1
+	atmosphere.Color = Color3.fromRGB(255, 195, 210)
+	atmosphere.Decay = Color3.fromRGB(190, 130, 165)
+	atmosphere.Glare = 0.2
+	atmosphere.Haze = 0.3
 	atmosphere.Parent = Lighting
 end
 

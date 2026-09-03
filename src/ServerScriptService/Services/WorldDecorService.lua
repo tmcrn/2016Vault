@@ -42,27 +42,29 @@ end
 
 -- Silhouette de montagnes au loin, très plates et désaturées, pour donner
 -- de la profondeur derrière la skyline (façon San Gabriel Mountains vues
--- depuis downtown LA au coucher de soleil).
+-- depuis downtown LA au coucher de soleil). Toutes tournées face caméra
+-- (pas de rotation aléatoire complète, sinon ça part dans tous les sens)
+-- et espacées pour qu'on distingue des pics plutôt qu'un mur plein.
 local function buildDistantMountains(folder)
 	local rng = Random.new(4242)
-	local centerX = (WORLD_X_MIN + WORLD_X_MAX) / 2
-	local spanX = (WORLD_X_MAX - WORLD_X_MIN) + 400
 
 	local x = WORLD_X_MIN - 200
 	while x < WORLD_X_MAX + 200 do
-		local width = rng:NextNumber(150, 300)
-		local height = rng:NextNumber(60, 130)
+		local width = rng:NextNumber(90, 160)
+		local height = rng:NextNumber(35, 75)
 		local mountain = Instance.new("WedgePart")
 		mountain.Name = "DistantMountain"
-		mountain.Size = Vector3.new(width, height, 40)
-		mountain.CFrame = CFrame.new(x, height / 2 - 15, 900) * CFrame.Angles(0, math.rad(rng:NextInteger(0, 359)), 0)
+		mountain.Size = Vector3.new(width, height, 30)
+		-- Léger tilt aléatoire (+/-8°) seulement, pour varier sans casser
+		-- l'alignement général de la chaîne.
+		mountain.CFrame = CFrame.new(x, height / 2 - 20, 1100) * CFrame.Angles(0, math.rad(rng:NextNumber(-8, 8)), 0)
 		mountain.Anchored = true
 		mountain.CanCollide = false
 		mountain.Material = Enum.Material.Sand
-		mountain.Color = Color3.fromRGB(150, 105, 130)
-		mountain.Transparency = 0.15
+		mountain.Color = Color3.fromRGB(160, 120, 140)
+		mountain.Transparency = 0.45
 		mountain.Parent = folder
-		x += width * rng:NextNumber(0.5, 0.8)
+		x += width + rng:NextNumber(-10, 20)
 	end
 end
 
@@ -326,19 +328,44 @@ end
 local function buildHillsideSign(folder)
 	local hillCenterX = (WORLD_X_MIN + WORLD_X_MAX) / 2
 
-	local hill = Instance.new("Part")
-	hill.Name = "Hill"
-	hill.Size = Vector3.new(WORLD_X_MAX - WORLD_X_MIN, 150, 200)
-	hill.CFrame = CFrame.new(hillCenterX, -40, 320) * CFrame.Angles(math.rad(-12), 0, 0)
-	hill.Anchored = true
-	hill.Material = Enum.Material.Grass
-	hill.Color = Color3.fromRGB(60, 70, 45)
-	hill.Parent = folder
+	-- Base basse et lointaine, juste pour ne pas voir le vide sous les
+	-- bosses de colline. Nettement plus petite que la skyline pour rester
+	-- un arrière-plan et pas un mur qui écrase tout.
+	local base = Instance.new("Part")
+	base.Name = "HillBase"
+	base.Size = Vector3.new(WORLD_X_MAX - WORLD_X_MIN + 200, 20, 140)
+	base.Position = Vector3.new(hillCenterX, 5, 420)
+	base.Anchored = true
+	base.CanCollide = false
+	base.Material = Enum.Material.Grass
+	base.Color = Color3.fromRGB(65, 60, 65)
+	base.Transparency = 0.2
+	base.Parent = folder
+
+	-- Chaîne de bosses arrondies (demi-sphères enfoncées) pour un vrai
+	-- profil de colline vallonnée plutôt qu'une dalle plate.
+	local rng = Random.new(7777)
+	local x = WORLD_X_MIN - 100
+	while x < WORLD_X_MAX + 100 do
+		local bumpHeight = rng:NextNumber(25, 55)
+		local bump = Instance.new("Part")
+		bump.Name = "HillBump"
+		bump.Shape = Enum.PartType.Ball
+		bump.Size = Vector3.new(bumpHeight * 2.2, bumpHeight * 2, bumpHeight * 2.2)
+		bump.Position = Vector3.new(x, bumpHeight * 0.15, 420 + rng:NextNumber(-20, 20))
+		bump.Anchored = true
+		bump.CanCollide = false
+		bump.Material = Enum.Material.Grass
+		bump.Color = Color3.fromRGB(70, 65, 70)
+		bump.Transparency = 0.2
+		bump.Parent = folder
+		x += bumpHeight * rng:NextNumber(1.6, 2.2)
+	end
 
 	local sign = Instance.new("Part")
 	sign.Name = "HillsideSign"
-	sign.Size = Vector3.new(140, 22, 1)
-	sign.Position = Vector3.new(hillCenterX, 55, 260)
+	sign.Size = Vector3.new(110, 18, 1)
+	sign.Position = Vector3.new(hillCenterX, 38, 350)
 	sign.Anchored = true
 	sign.CanCollide = false
 	sign.Material = Enum.Material.SmoothPlastic
