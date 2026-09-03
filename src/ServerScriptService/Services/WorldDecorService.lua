@@ -348,10 +348,17 @@ local function buildFerrisWheel(center, folder)
 end
 
 --[[
-	Construit tout le décor. À appeler UNE SEULE FOIS au démarrage du
-	serveur (voir Main.server.lua) — jamais par joueur.
+	Construit tout le décor. Appelé au démarrage du serveur (voir
+	Main.server.lua) — mais NE FAIT RIEN si un dossier "WorldDecor"
+	existe déjà dans le Workspace. Ça permet de le générer une seule
+	fois à la main via la Command Bar en mode Édition (pour ensuite le
+	modifier/compléter toi-même) sans qu'il se duplique à chaque Play.
 ]]
 function WorldDecorService.Build()
+	if Workspace:FindFirstChild("WorldDecor") then
+		return
+	end
+
 	local folder = Instance.new("Folder")
 	folder.Name = "WorldDecor"
 	folder.Parent = Workspace
